@@ -1,9 +1,9 @@
 import onedphysics as phy
 import simulation as sim
 
-class Model:
+class OldModel:
     def __init__(self):
-        self.quad = phy.OnedPoint()
+        self.quad = phy.Body()
         self.quad.m = 1.0
         self.quad.xvel = 0.0
         self.quad.xpos = 20.0
@@ -22,3 +22,15 @@ class Model:
             history.append(state)
             self.step(delta)
         return history
+
+def createball():
+    frame = sim.Model("frame", phy.Body(1.0) )
+    ground = sim.Model("ground", phy.Surface(0.0, 1.0) )
+    gravity = sim.Model("gravity", phy.Gravity() )
+    ball = sim.Compound ("ball", [ frame, ground, gravity ] )
+    ball.bind()
+    gravity.connect("m", frame.get("m"))
+    ground.connect("x", frame.get("x"))
+    frame.connect("f", phy.NetForce( [ gravity.get("f"), ground.get("f") ] ).force() )
+    ball.init()
+    return ball
