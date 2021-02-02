@@ -44,9 +44,13 @@ class Body:
         self.xpos += self.xvel * delta
         self.xvel += acc * delta
 
+    def setm(self, m):
+        self.m = m
+
     def bind(self, model):
         model.addinput("f")
         model.addfunction("m", lambda s: s.m )
+        model.addparameter("m", lambda s, m: s.setm(m) , lambda s: s.m )
         model.addstate("x", lambda s, d: s.stepfx(d, model.get("x"), model.get("v") ) )
         model.addstate("v", lambda s, d: s.stepfv(d, model.get("v"), model.get("f") ) )
 
@@ -71,6 +75,9 @@ class Surface:
         self.xnorm = xnorm
         self.elasticity = 100.0
 
+    def sete(self, e):
+        self.elasticity = e
+
     def forcef(self, x):
         return self.force( x() )
 
@@ -81,6 +88,7 @@ class Surface:
 
     def bind(self, model):
         model.addinput("x")
+        model.addparameter("e", lambda s, e: s.sete(e) , lambda s: s.elasticity )
         model.addfunction("f", lambda s: s.forcef(model.get("x") ) )
 
     def init(self):
