@@ -1,6 +1,4 @@
-
-def gravity(mass):
-    return -9.8 * mass
+# 1D simple physics modelling
 
 class Gravity:
     def __init__(self):
@@ -32,17 +30,6 @@ class NetForce:
 class Body:
     def __init__(self, m):
         self.m = m
-        self.xvel = 0.0
-        self.xpos = 0.0
-        self.forces = []
-
-    def state(self):
-        return { 'x' : self.xpos, 'vx' : self.xvel }
-
-    def step(self, delta):
-        acc = sum( map (lambda x: x(), self.forces) ) / self.m
-        self.xpos += self.xvel * delta
-        self.xvel += acc * delta
 
     def setm(self, m):
         self.m = m
