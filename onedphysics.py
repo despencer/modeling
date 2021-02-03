@@ -29,7 +29,7 @@ class NetForce:
 
 class Body:
     def __init__(self, m):
-        self.m = m
+        self.m = m   # in kilogramms
 
     def setm(self, m):
         self.m = m
@@ -42,7 +42,7 @@ class Body:
         model.addstate("v", lambda s, d: s.stepfv(d, model.get("v"), model.get("f") ) )
 
     def init(self):
-        return { 'x' : 20.0, 'v' : 0.0 }
+        return { 'x' : 20.0, 'v' : 0.0 }     # meters and meters per second
 
     def stepfx(self, delta, x, v):
         return self.stepx(delta, x(), v())
@@ -59,24 +59,29 @@ class Body:
 class Surface:
     def __init__(self, xpos, xnorm):
         self.xpos = xpos
-        self.xnorm = xnorm
+        self.xnorm = 1.0 if xnorm >= 0.0 else -1.0
         self.elasticity = 100.0
+        self.friction = 0.0
 
     def sete(self, e):
         self.elasticity = e
 
-    def forcef(self, x):
-        return self.force( x() )
+    def setf(self, f):
+        self.friction = f
 
-    def force(self, xpoint):
+    def forcef(self, x, v):
+        return self.force( x() , v() )
+
+    def force(self, xpoint, v):
         if (xpoint >= self.xpos and self.xnorm >= 0) or (xpoint < self.xpos and self.xnorm < 0) :
-            return 0
-        return abs(self.xpos - xpoint) * self.elasticity
+            return 0       # outside of the surface
+        return ( (self.xpos - xpoint) * self.elasticity ) + ( (-v) * self.friction )
 
     def bind(self, model):
         model.addinput("x")
         model.addparameter("e", lambda s, e: s.sete(e) , lambda s: s.elasticity )
-        model.addfunction("f", lambda s: s.forcef(model.get("x") ) )
+        model.addparameter("fr", lambda s, f: s.setf(f) , lambda s: s.friction )
+        model.addfunction("f", lambda s: s.forcef(model.get("x"), model.get("v") ) )
 
     def init(self):
         return { }

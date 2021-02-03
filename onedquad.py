@@ -9,6 +9,7 @@ def createball():
     ball.bind()
     gravity.connect("m", frame.get("m"))
     ground.connect("x", frame.get("x"))
+    ground.connect("v", frame.get("v"))
     frame.connect("f", phy.NetForce( [ gravity.get("f"), ground.get("f") ] ).force() )
     ball.init()
     return ball
