@@ -122,15 +122,6 @@ class Compound:
         self.stepcalc(delta)
         self.stepswitch()
 
-    def simulate(self, start, end, delta):
-        history = []
-        for t in timerange(start, end, delta):
-            state = {'t' : t}
-            state.update(self.getstate())
-            history.append(state)
-            self.step(delta)
-        return history
-
     def getallparams(self):
         params = {}
         for sub in self.subs.values():
@@ -138,6 +129,24 @@ class Compound:
             if len(children) > 0:
                 params[sub.name] = children
         return params
+
+class Simulation:
+    def __init__(self, model):
+        self.model = model
+
+    def simulate(self, start, end, delta):
+        history = []
+        for t in timerange(start, end, delta):
+            self.state = {'time' : t}
+            state = {'time' : t}
+            state.update(self.model.getstate())
+            history.append(state)
+            self.model.stepcalc(delta)
+            self.model.stepswitch()
+        return history
+
+    def get(self, name):
+        return lambda : self.state[name]
 
 def stub():
     return 0.0

@@ -85,3 +85,57 @@ class Surface:
 
     def init(self):
         return { }
+
+class Motor:
+    def __init__ (self):
+        self.elasticity = 5.0 # Newtons per second, analog to the KV rating
+
+    def sete(self, e):
+        self.elasticity = e
+
+    def stepfc(self, delta, current, target):
+        return self.stepc(delta, current(), target() )
+
+    def stepc(self, delta, current, target):
+        if self.elasticity * delta >= abs(current - target):
+            return target
+        if target > current:
+            return current + ( self.elasticity * delta )
+        else:
+            return current - ( self.elasticity * delta )
+
+    def bind(self, model):
+        model.addinput("target")
+        model.addparameter("e", lambda s, e: s.sete(e) , lambda s: s.elasticity )
+        model.addstate("thrust", lambda s, d: s.stepfc(d, model.get("thrust"), model.get("target") ) )
+
+    def init(self):
+        return { 'thrust' : 0.0 }     # current force (Newtons)
+
+class ProfileRegulator:
+    def __init__ (self):
+        self.clock = 100               # controller frequency in Hz
+        self.profile = [ (1e17, 0.0 ) ] # pairs of time , values. Zero at infinity
+
+    def setp(self, p):
+        self.profile = p
+        self.profile.append( (1e17, 0.0 ) )
+        self.profile.sort()
+
+    def setq(self, q):
+        self.clock = q
+
+    def signalf(self, t):
+        return self.signal( t() )
+
+    def signal(self, t):
+        return next(x for x in self.profile if x[0] >= t)
+
+    def bind(self, model):
+        model.appinput("time")
+        model.addparameter("clock", lambda s, q: s.setq(q), lambda s: s.clock )
+        model.addparameter("profile", lambda s, p: s.setp(p.copy()), lambda s: s.profile.copy() )
+        model.addsignal("target", self.clock, lambda s, d: s.signalf(d, model.get("time") ) )
+
+    def init(self):
+        return { 'target' : 0.0 }
