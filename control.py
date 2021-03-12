@@ -32,3 +32,29 @@ class Clock:
 
     def init(self):
         return { 'clock' : 0.0 }
+
+class Counter:
+    def __init__(self):
+        self.setsz(10)
+
+    def setsz(self, sz):
+        self.size = sz
+
+    def value(self):
+        return self.value()
+
+    def valuef(self, value):
+        return self.value( value() )
+
+    def value(self, value):
+        value = value - 1
+        if value < 0:
+            value = self.size-1
+        return value
+
+    def bind(self, controller):
+        controller.addparameter("size", lambda s, sz: s.setsz(sz), lambda s: s.size )
+        controller.addstate("value", lambda s: s.valuef( controller.get("value") ) )
+
+    def init(self):
+        return { 'value' : self.size-1 }

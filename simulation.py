@@ -5,27 +5,21 @@ def timerange(start, stop, delta):
         yield start
         start += delta
 
-class Model:
-    def __init__(self, name, physics):
+class Representation:
+    def __init__(self, name, source):
         self.name = name
-        self.physics = physics
+        self.source = source
         self.states = { }
         self.inputs = { }
-        self.funcs = { }
         self.params = { }
         self.Parameters = namedtuple('Parameters', ['setter' , 'getter'] )
 
     def bind(self):
-        self.physics.bind(self)
+        self.source.bind(self)
 
     def init(self):
-        self.current = self.physics.init()
+        self.current = self.source.init()
         return self.current
-
-    def stepcalc(self, delta):
-        self.next = { }
-        for state, trans in self.states.items():
-            self.next[state] =  trans(self.physics, delta)
 
     def stepswitch(self):
         self.current = self.next
@@ -40,14 +34,46 @@ class Model:
     def addinput(self, name):
         self.inputs[name] = stub
 
-    def addfunction(self, name, func):
-        self.funcs[name] = func
-
     def addparameter(self, name, setter, getter):
         self.params[name] = self.Parameters(setter, getter)
 
     def get(self, name):
         return lambda : self.getbyname(name)
+
+    def connect(self, name, val):
+        self.inputs[name] = val
+
+    def setparam(self, name, value):
+        if name in self.params:
+            self.params[name].setter(self.source, value)
+        else:
+            self.current[name] = value
+
+    def getparam(self, name):
+        if name in self.params:
+            return self.params[name].getter(self.source)
+        else:
+            return self.current[name]
+
+    def getallparams(self):
+        params = self.current.copy()
+        for name, accessor in self.params.items():
+            params[name] = accessor.getter(self.source)
+        return params
+
+class Model(Representation):
+    def __init__(self, name, physics):
+        super().__init__(name, physics)
+        self.physics = physics
+        self.funcs = { }
+
+    def stepcalc(self, delta):
+        self.next = { }
+        for state, trans in self.states.items():
+            self.next[state] =  trans(self.physics, delta)
+
+    def addfunction(self, name, func):
+        self.funcs[name] = func
 
     def getbyname(self, name):
         if name in self.states:
@@ -57,26 +83,24 @@ class Model:
         else:
             return self.inputs[name]()
 
-    def connect(self, name, val):
-        self.inputs[name] = val
+class Controller(Representation):
+    def __init__(self, name, logic):
+        super().__init__(name, logic)
+        self.logic = logic
 
-    def setparam(self, name, value):
-        if name in self.params:
-            self.params[name].setter(self.physics, value)
+    def stepcalc(self, delta):
+        if self.inputs["signal"]():
+            self.next = { }
+            for state, trans in self.states.items():
+                self.next[state] =  trans(self.logic)
         else:
-            self.current[name] = value
+            self.next = self.current
 
-    def getparam(self, name):
-        if name in self.params:
-            return self.params[name].getter(self.physics)
-        else:
+    def getbyname(self, name):
+        if name in self.states:
             return self.current[name]
-
-    def getallparams(self):
-        params = self.current.copy()
-        for name, accessor in self.params.items():
-            params[name] = accessor.getter(self.physics)
-        return params
+        else:
+            return self.inputs[name]()
 
 class Compound:
     def __init__(self, name, subs):
@@ -117,10 +141,6 @@ class Compound:
             for name,value in s.getstate().items():
                 state[s.name+name] = value
         return state;
-
-    def step(self, delta):
-        self.stepcalc(delta)
-        self.stepswitch()
 
     def getallparams(self):
         params = {}
