@@ -112,30 +112,3 @@ class Motor:
     def init(self):
         return { 'thrust' : 0.0 }     # current force (Newtons)
 
-class ProfileRegulator:
-    def __init__ (self):
-        self.clock = 100               # controller frequency in Hz
-        self.profile = [ (1e17, 0.0 ) ] # pairs of time , values. Zero at infinity
-
-    def setp(self, p):
-        self.profile = p
-        self.profile.append( (1e17, 0.0 ) )
-        self.profile.sort()
-
-    def setq(self, q):
-        self.clock = q
-
-    def signalf(self, t):
-        return self.signal( t() )
-
-    def signal(self, t):
-        return next(x for x in self.profile if x[0] >= t)
-
-    def bind(self, model):
-        model.appinput("time")
-        model.addparameter("clock", lambda s, q: s.setq(q), lambda s: s.clock )
-        model.addparameter("profile", lambda s, p: s.setp(p.copy()), lambda s: s.profile.copy() )
-        model.addsignal("target", self.clock, lambda s, d: s.signalf(d, model.get("time") ) )
-
-    def init(self):
-        return { 'target' : 0.0 }

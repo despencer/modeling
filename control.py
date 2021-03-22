@@ -58,3 +58,27 @@ class Counter:
 
     def init(self):
         return { 'value' : self.size-1 }
+
+class ProfileRegulator:
+    def __init__ (self):
+        self.profile = [ (-1e17, 0.0 ) ] # pairs of (time , values). Zero at infinity
+
+    def setp(self, p):
+        self.profile = p
+        self.profile.append( (-1e17, 0.0 ) )
+        self.profile.sort(reverse=True)
+
+    def targetf(self, t):
+        return self.target( t() )
+
+    def target(self, t):
+        return next(x for x in self.profile if x[0] <= t)[1]
+
+    def bind(self, controller):
+        controller.addinput("time")
+        controller.addparameter("profile", lambda s, p: s.setp(p.copy()), lambda s: sorted(s.profile.copy()) )
+        controller.addstate("target", lambda s: s.targetf( controller.get("time") ) )
+
+    def init(self):
+        return { 'target' : self.target(0.0) }
+
