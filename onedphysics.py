@@ -87,8 +87,9 @@ class Surface:
         return { }
 
 class Motor:
-    def __init__ (self):
+    def __init__ (self, xnorm):
         self.elasticity = 5.0 # Newtons per second, analog to the KV rating
+        self.xnorm = 1.0 if xnorm >= 0.0 else -1.0 # up or down
 
     def sete(self, e):
         self.elasticity = e
@@ -97,12 +98,14 @@ class Motor:
         return self.stepc(delta, current(), target() )
 
     def stepc(self, delta, current, target):
+        if (self.xnorm > 0 and target < 0) or (self.xnorm < 0 and target > 0):
+              target = 0.0
         if self.elasticity * delta >= abs(current - target):
             return target
-        if target > current:
-            return current + ( self.elasticity * delta )
+        if abs(target) > abs(current):
+            return current + self.xnorm * ( self.elasticity * delta )
         else:
-            return current - ( self.elasticity * delta )
+            return current - self.xnorm * ( self.elasticity * delta )
 
     def bind(self, model):
         model.addinput("target")
