@@ -106,6 +106,7 @@ class Compound:
     def __init__(self, name, subs):
         self.name = name
         self.subs = { }
+        self.io = { }
         for s in subs:
             self.subs[s.name] = s
 
@@ -134,6 +135,12 @@ class Compound:
 
     def stepswitch(self):
         self.map( lambda x: x.stepswitch() )
+
+    def getio(self, name):
+        return lambda : self.io[name]()
+
+    def setio(self, name, func):
+        self.io[name] = func
 
     def getstate(self):
         state = {}
