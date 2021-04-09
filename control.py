@@ -25,7 +25,6 @@ class Clock:
         return True
 
     def bind(self, model):
-        model.addinput("time")
         model.addparameter("frequency", lambda s, fq: s.setfq(fq), lambda s: s.frequency )
         model.addstate("clock", lambda s, d: s.clockf(d, model.get("time"), model.get("clock") ) )
         model.addfunction("signal", lambda s: s.signalf( model.get("time"), model.get("clock") ) )
@@ -75,10 +74,8 @@ class ProfileRegulator:
         return next(x for x in self.profile if x[0] <= t)[1]
 
     def bind(self, controller):
-        controller.addinput("time")
         controller.addparameter("profile", lambda s, p: s.setp(p.copy()), lambda s: sorted(s.profile.copy()) )
         controller.addstate("target", lambda s: s.targetf( controller.get("time") ) )
 
     def init(self):
         return { 'target' : self.target(0.0) }
-

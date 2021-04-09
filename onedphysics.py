@@ -11,7 +11,6 @@ class Gravity:
         return -self.g * m
 
     def bind(self, model):
-        model.addinput("m")
         model.addfunction("f", lambda s: s.forcef(model.get("m") ) )
 
     def init(self):
@@ -35,7 +34,6 @@ class Body:
         self.m = m
 
     def bind(self, model):
-        model.addinput("f")
         model.addfunction("m", lambda s: s.m )
         model.addparameter("m", lambda s, m: s.setm(m) , lambda s: s.m )
         model.addstate("x", lambda s, d: s.stepfx(d, model.get("x"), model.get("v") ) )
@@ -78,7 +76,6 @@ class Surface:
         return ( (self.xpos - xpoint) * self.elasticity ) + ( (-v) * self.friction )
 
     def bind(self, model):
-        model.addinput("x")
         model.addparameter("e", lambda s, e: s.sete(e) , lambda s: s.elasticity )
         model.addparameter("fr", lambda s, f: s.setf(f) , lambda s: s.friction )
         model.addfunction("f", lambda s: s.forcef(model.get("x"), model.get("v") ) )
@@ -108,7 +105,6 @@ class Motor:
             return current - self.xnorm * ( self.elasticity * delta )
 
     def bind(self, model):
-        model.addinput("target")
         model.addparameter("e", lambda s, e: s.sete(e) , lambda s: s.elasticity )
         model.addstate("thrust", lambda s, d: s.stepfc(d, model.get("thrust"), model.get("target") ) )
 

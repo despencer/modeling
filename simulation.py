@@ -13,9 +13,7 @@ class Representation:
         self.inputs = { }
         self.params = { }
         self.Parameters = namedtuple('Parameters', ['setter' , 'getter'] )
-
-    def bind(self):
-        self.source.bind(self)
+        source.bind(self)
 
     def init(self):
         self.current = self.source.init()
@@ -30,9 +28,6 @@ class Representation:
 
     def addstate(self, state, func):
         self.states[state] = func
-
-    def addinput(self, name):
-        self.inputs[name] = stub
 
     def addparameter(self, name, setter, getter):
         self.params[name] = self.Parameters(setter, getter)
@@ -63,9 +58,9 @@ class Representation:
 
 class Model(Representation):
     def __init__(self, name, physics):
-        super().__init__(name, physics)
         self.physics = physics
         self.funcs = { }
+        super().__init__(name, physics)
 
     def stepcalc(self, delta):
         self.next = { }
@@ -85,8 +80,8 @@ class Model(Representation):
 
 class Controller(Representation):
     def __init__(self, name, logic):
-        super().__init__(name, logic)
         self.logic = logic
+        super().__init__(name, logic)
 
     def stepcalc(self, delta):
         if self.inputs["signal"]():
@@ -113,9 +108,6 @@ class Compound:
     def map(self, func):
         for s in self.subs.values():
             func(s)
-
-    def bind(self):
-        self.map( lambda x: x.bind() )
 
     def setparam(self, name, value):
         isep = name.find('.')
@@ -174,6 +166,3 @@ class Simulation:
 
     def get(self, name):
         return lambda : self.state[name]
-
-def stub():
-    return 0.0
