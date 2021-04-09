@@ -11,7 +11,6 @@ def createball():
     ground.connect("x", frame.get("x"))
     ground.connect("v", frame.get("v"))
     frame.connect("f", phy.NetForce( [ gravity.get("f"), ground.get("f") ] ).force() )
-    ball.init()
     return ball
 
 def createquad():
@@ -30,5 +29,4 @@ def createquad():
     profile.connect("signal",clock.get("signal"))
     profile.connect("time", quad.getio("time"))
     motor.connect("target", profile.get("target"))
-    quad.init()
     return quad
