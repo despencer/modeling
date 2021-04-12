@@ -82,32 +82,3 @@ class Surface:
 
     def init(self):
         return { }
-
-class Motor:
-    def __init__ (self, xnorm):
-        self.elasticity = 5.0 # Newtons per second, analog to the KV rating
-        self.xnorm = 1.0 if xnorm >= 0.0 else -1.0 # up or down
-
-    def sete(self, e):
-        self.elasticity = e
-
-    def stepfc(self, delta, current, target):
-        return self.stepc(delta, current(), target() )
-
-    def stepc(self, delta, current, target):
-        if (self.xnorm > 0 and target < 0) or (self.xnorm < 0 and target > 0):
-              target = 0.0
-        if self.elasticity * delta >= abs(current - target):
-            return target
-        if abs(target) > abs(current):
-            return current + self.xnorm * ( self.elasticity * delta )
-        else:
-            return current - self.xnorm * ( self.elasticity * delta )
-
-    def bind(self, model):
-        model.addparameter("e", lambda s, e: s.sete(e) , lambda s: s.elasticity )
-        model.addstate("thrust", lambda s, d: s.stepfc(d, model.get("thrust"), model.get("target") ) )
-
-    def init(self):
-        return { 'thrust' : 0.0 }     # current force (Newtons)
-
