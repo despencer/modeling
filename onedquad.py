@@ -18,12 +18,15 @@ def createquad():
     ground = sim.Model("ground", phy.Surface(0.0, 1.0) )
     gravity = sim.Model("gravity", phy.Gravity() )
     motor = sim.Model("motor", Motor(1.0) )
-    quad = sim.Compound ("quad", [ frame, motor, ground, gravity ] )
+    baro = sim.Model("baro", Baro() )
+    quad = sim.Compound ("quad", [ frame, motor, baro, ground, gravity ] )
     gravity.connect("m", frame.get("m"))
     ground.connect("x", frame.get("x"))
     ground.connect("v", frame.get("v"))
     frame.connect("f", phy.NetForce( [ gravity.get("f"), motor.get("thrust"), ground.get("f") ] ).force() )
     motor.connect("target", quad.getio("motor"))
+    baro.connect("x", frame.get("x"))
+    quad.setio("baro", baro.get("level"))
     return quad
 
 class Motor:
@@ -53,3 +56,19 @@ class Motor:
 
     def init(self):
         return { 'thrust' : 0.0 }     # current force (Newtons)
+
+class Baro:
+    def __init__ (self):
+        pass
+
+    def sensef(self, delta, x):
+        return self.sense(delta, x() )
+
+    def sense(self, delta, x):
+        return x
+
+    def bind(self, model):
+        model.addstate("level", lambda s, d: s.sensef(d, model.get("x") ) )
+
+    def init(self):
+        return { 'level' : 0.0 } 
